@@ -3,6 +3,7 @@
 .env
 vendor
 go.sum
+conf.yaml
 
 __debug_bin
 
