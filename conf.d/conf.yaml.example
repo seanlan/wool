@@ -1,0 +1,14 @@
+APP_NAME: "weave" #应用名称
+LOG_DEBUG: true #日志等级
+SECRET_KEY: "SUS4zn5L9SC!F#W*NcoHIHwvE2r8!L1*cwPuR1P3UIZijIxa9lRX!D5@a$#CBmA8"
+WEB: #web服务配置
+  GIN_MODE: debug #debug,release
+  HOST_NAME: :8080
+REDIS: "redis://localhost:6378/1"
+MYSQL: "root:q145145145@tcp(127.0.0.1:3306)/wool?parseTime=True&loc=Local&charset=utf8mb4&collation=utf8mb4_unicode_ci"
+TASK_QUEUE:
+  #broker: amqp://root:q145145@127.0.0.1:5672/root
+  broker: "redis://localhost:6379/0"
+  result_backend: "redis://localhost:6379"
+  results_expire_in: 1
+  default_queue: "weave"
