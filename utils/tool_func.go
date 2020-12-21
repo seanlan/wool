@@ -21,9 +21,9 @@ func MapToUrlencoded(m map[string]string, secretKey string) string {
 		_source = append(_source, fmt.Sprintf("%s=%s", k, m[k]))
 	}
 	sourceStr := strings.Join(_source, "&")
-	sourceStr = fmt.Sprintf("%s%s",sourceStr,secretKey)
+	sourceStr = fmt.Sprintf("%s%s", sourceStr, secretKey)
 	//MD5加密
-	logging.Info("sourceStr:",sourceStr)
+	logging.Info("sourceStr:", sourceStr)
 	h := md5.New()
 	h.Write([]byte(sourceStr))
 	return strings.ToUpper(hex.EncodeToString(h.Sum(nil)))

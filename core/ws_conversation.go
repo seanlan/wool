@@ -1,15 +1,24 @@
 package core
 
-type ChatType int64
-
-// 会话类型
-const (
-	SingleChat ChatType = 1 //单聊
-	GroupChat  ChatType = 2 //群聊
+import (
+	"crypto/md5"
+	"encoding/hex"
+	"fmt"
+	"sort"
+	"strings"
 )
 
-type WSConversation struct {
-	Key      string   `json:"key,required"`       //会话key
-	AppKey   string   `json:"appkey,required"`    //应用ID
-	ChatType ChatType `json:"chat_type,required"` //会话类型
+// makeClientKey 根据appkey和tag生成client唯一标示
+func MakeConversationID(appKey, from, to string, event int) string {
+	var source string
+	if event == 1 {
+		keys := []string{from, to}
+		sort.Strings(keys)
+		source = strings.Join(keys, ":")
+	} else {
+		source = to
+	}
+	h := md5.New()
+	h.Write([]byte(fmt.Sprintf("%s:%s", appKey, source)))
+	return hex.EncodeToString(h.Sum(nil))
 }

@@ -18,15 +18,17 @@ package cmd
 import (
 	"github.com/seanlan/packages/logging"
 	"github.com/seanlan/packages/task_queue"
+	tasks2 "github.com/seanlan/wool/tasks"
 
 	"github.com/spf13/cobra"
 )
 
 func registerTasks() {
 	tasks := map[string]interface{}{
-		"PrintOK": task_queue.PrintOK,
-		"SayHi":   task_queue.SayHi,
-		"Add":     task_queue.Add,
+		"PrintOK":     task_queue.PrintOK,
+		"SayHi":       task_queue.SayHi,
+		"Add":         task_queue.Add,
+		"SaveMessage": tasks2.SaveChatMessage,
 	}
 	task_queue.RegisterTasks(tasks)
 }

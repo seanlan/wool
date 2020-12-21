@@ -16,9 +16,11 @@ limitations under the License.
 package cmd
 
 import (
+	"encoding/json"
 	"github.com/RichardKnop/machinery/v1/tasks"
 	"github.com/seanlan/packages/logging"
 	"github.com/seanlan/packages/task_queue"
+	"github.com/seanlan/wool/core"
 	"github.com/seanlan/wool/utils"
 	"github.com/spf13/cobra"
 )
@@ -55,6 +57,13 @@ func makeToken(args string) {
 	j := utils.NewJWT("u98ef98sudfae98")
 	token, _ := j.CreateToken(args, 3600*24*30)
 	logging.Logger.Info(token)
+	msg, _ := json.Marshal(core.WSMessage{
+		From:    "123123",
+		To:      "123123",
+		Event:   0,
+		Content: "asdfasdf",
+	})
+	logging.Logger.Info(string(msg))
 }
 
 // testCmd represents the test command

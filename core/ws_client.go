@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"github.com/seanlan/packages/logging"
 	"time"
@@ -20,17 +21,17 @@ const (
 type WSClient struct {
 	Key      string          //连接标识
 	AppKey   string          //所属应用
-	Tag      string          //所属应用的标识
+	Tag      string          //所属应用的用户标识
 	conn     *websocket.Conn //websocket连接
 	SendPool chan []byte     //发送的消息缓存池
 	hub      *ClientHub      //client管理对象
 }
 
-//开始读取消息
+// readPump 开始读取消息
 func (wc *WSClient) readPump() {
 	//关闭链接
 	defer func() {
-		wc.hub.draw(wc)
+		wc.hub.drop(wc)
 		_ = wc.conn.Close()
 	}()
 	//设置消息最大长度
@@ -60,18 +61,23 @@ func (wc *WSClient) readPump() {
 			logging.Logger.Debugf("消息解析失败:%s", message)
 			continue
 		}
+
 		wsMsg.From = wc.Tag
+		msgUuid, _ := uuid.NewUUID()
+		wsMsg.MsgID = msgUuid.String()
+		wsMsg.SendTime = time.Now().Unix()
+
 		var qMsg = QueueMessage{
 			WSMessage: wsMsg,
 			AppKey:    wc.AppKey,
 		}
 		//将消息发送到hub进行分发
-		wc.hub.queueBuff <- qMsg
+		wc.hub.putMsg(qMsg)
 	}
 	logging.Logger.Debug("ws client readPump stop !!")
 }
 
-//开始发送消息
+// writePump 开始发送消息
 func (wc *WSClient) writePump() {
 	ticker := time.NewTicker(pingPeriod)
 	defer func() {
@@ -111,13 +117,22 @@ ForEnd:
 	logging.Logger.Debug("ws client writePump stop!!")
 }
 
+// sendMsg 发送消息
+func (wc *WSClient) SendMsg(msg []byte) {
+	if wc == nil {
+		return
+	}
+	wc.SendPool <- msg
+}
+
+// makeClientKey 根据appkey和tag生成client唯一标示
 func makeClientKey(appKey, tag string) string {
 	h := md5.New()
 	h.Write([]byte(fmt.Sprintf("%s:%s", appKey, tag)))
 	return hex.EncodeToString(h.Sum(nil))
 }
 
-func newWSClient(appKey, tag string, conn *websocket.Conn) *WSClient {
+func NewWSClient(appKey, tag string, conn *websocket.Conn) {
 	wsClient := &WSClient{
 		Key:      makeClientKey(appKey, tag),
 		AppKey:   appKey,
@@ -128,5 +143,5 @@ func newWSClient(appKey, tag string, conn *websocket.Conn) *WSClient {
 	}
 	go wsClient.readPump()
 	go wsClient.writePump()
-	return wsClient
+	WSClientHub.join(wsClient)
 }

@@ -16,14 +16,13 @@ limitations under the License.
 package main
 
 import (
-	"github.com/seanlan/packages/db"
-	"github.com/seanlan/wool/cmd"
-
 	machinery_conf "github.com/RichardKnop/machinery/v1/config"
 	"github.com/seanlan/packages/config"
+	"github.com/seanlan/packages/db"
 	"github.com/seanlan/packages/gredis"
 	"github.com/seanlan/packages/logging"
 	"github.com/seanlan/packages/task_queue"
+	"github.com/seanlan/wool/cmd"
 )
 
 func setEnv() {

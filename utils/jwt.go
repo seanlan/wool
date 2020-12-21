@@ -51,7 +51,7 @@ func MakeTimedToken(data string, secretKey string, timeout int64) (string, error
 	return j.CreateToken(data, timeout)
 }
 
-func ParseTimedToken(secretKey, token string) (string, error){
+func ParseTimedToken(secretKey, token string) (string, error) {
 	j := NewJWT(secretKey)
 	return j.ParseToken(token)
 }

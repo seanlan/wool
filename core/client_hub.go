@@ -2,8 +2,10 @@ package core
 
 import (
 	"encoding/json"
+	"github.com/RichardKnop/machinery/v1/tasks"
 	"github.com/emirpasic/gods/sets/hashset"
 	"github.com/seanlan/packages/logging"
+	"github.com/seanlan/packages/task_queue"
 )
 
 type ClientHub struct {
@@ -15,15 +17,16 @@ type ClientHub struct {
 
 var WSClientHub *ClientHub
 
+// InitHub 初始化Hub
 func InitHub() {
 	WSClientHub = &ClientHub{
 		queueBuff: make(chan QueueMessage),
-		clients:            make(map[string]*hashset.Set),
+		clients:   make(map[string]*hashset.Set),
 	}
 	go WSClientHub.run()
 }
 
-// 加入新的连接
+// join 加入新的连接
 func (hub *ClientHub) join(wsClient *WSClient) {
 	clientKey := wsClient.Key
 	if _, ok := hub.clients[clientKey]; !ok {
@@ -32,8 +35,8 @@ func (hub *ClientHub) join(wsClient *WSClient) {
 	hub.clients[clientKey].Add(wsClient)
 }
 
-// 端开连接
-func (hub *ClientHub) draw(wsClient *WSClient) {
+// drop 断开连接
+func (hub *ClientHub) drop(wsClient *WSClient) {
 	clientKey := wsClient.Key
 	if _, ok := hub.clients[clientKey]; ok {
 		hub.clients[clientKey].Remove(wsClient)
@@ -42,17 +45,39 @@ func (hub *ClientHub) draw(wsClient *WSClient) {
 	logging.Logger.Debugf("hub clients: %v", hub.clients)
 }
 
-func (hub *ClientHub) run() {
-	// 进行消息分发
+// distribute 进行消息分发
+func (hub *ClientHub) distribute() {
 	for {
 		queueMsg, _ := <-hub.queueBuff
 		clientKey := makeClientKey(queueMsg.AppKey, queueMsg.To)
 		clientSet, ok := hub.clients[clientKey]
-		message,_ := json.Marshal(queueMsg.WSMessage)
+		message, _ := json.Marshal(queueMsg.WSMessage)
 		if ok {
 			for _, c := range clientSet.Values() {
-				c.(*WSClient).SendPool <- message
+				c.(*WSClient).SendMsg(message)
 			}
 		}
 	}
+}
+
+// 放入消息
+func (hub *ClientHub) putMsg(queueMsg QueueMessage) {
+	hub.queueBuff <- queueMsg
+	msgBytes, err := json.Marshal(queueMsg)
+	if err == nil {
+		task_queue.SendTask("SaveMessage",
+			[]tasks.Arg{
+				{
+					Name:  "message",
+					Type:  "[]byte",
+					Value: msgBytes,
+				},
+			}, "", 0)
+	}
+
+}
+
+// run
+func (hub *ClientHub) run() {
+	go hub.distribute()
 }

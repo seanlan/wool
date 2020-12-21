@@ -18,7 +18,7 @@ package cmd
 import (
 	"github.com/seanlan/packages/config"
 	"github.com/seanlan/packages/router"
-	"github.com/seanlan/wool/routers"
+	"github.com/seanlan/wool/web/routers"
 
 	"github.com/spf13/cobra"
 )
